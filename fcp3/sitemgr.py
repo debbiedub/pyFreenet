@@ -96,6 +96,7 @@ class SiteMgr:
         self.index = kw.get('index', 'index.html')
         self.sitemap = kw.get('index', 'sitemap.html')
         self.mtype = kw.get('mtype', 'text/html')
+        self.forceTextPlain = kw.get('forceTextPlain', False)
 
         self.name = "freesitemgr-" + "--".join(args)
         # To decide whether to upload index and activelink as part of
@@ -173,6 +174,7 @@ class SiteMgr:
                 noInsert=self.noInsert,
                 chkCalcNode=self.chkCalcNode,
                 mtype=self.mtype,
+                forceTextPlain=self.forceTextPlain,
                 )
             self.sites.append(site)
     
@@ -244,6 +246,7 @@ class SiteMgr:
                          index=self.index,
                          sitemap=self.sitemap,
                          mtype=self.mtype,
+                         forceTextPlain=self.forceTextPlain,
                          **kw)
         self.sites.append(site)
     
@@ -489,6 +492,7 @@ class SiteState:
         self.index = kw.get('index', 'index.html')
         self.sitemap = kw.get('sitemap', 'sitemap.html')
         self.mtype = kw.get('mtype', 'text/html')
+        self.forceTextPlain = kw.get('forceTextPlain', False)
         
         #print "Verbosity=%s" % self.Verbosity
     
@@ -684,6 +688,7 @@ class SiteState:
             writeVars(index=self.index)
             writeVars(sitemap=self.sitemap)
             writeVars(mtype=self.mtype)
+            writeVars(forceTextPlain=self.forceTextPlain)
             
             w("\n")
             # we should not save generated files.
@@ -1157,6 +1162,8 @@ class SiteState:
                 # new file - add it and flag update
                 log(DETAIL, "scan: file %s has been added" % name)
                 rec['uri'] = ''
+                if self.forceTextPlain:
+                    rec['mimetype'] = 'text/plain'
                 self.files.append(rec)
                 rec['state'] = 'changed'
                 self.filesDict[name] = rec
