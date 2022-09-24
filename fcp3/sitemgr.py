@@ -1603,8 +1603,8 @@ class SiteState:
                     "Files.%d.Name=%s" % (n, rec['name']),
                     "Files.%d.UploadFrom=direct" % n,
                     "Files.%d.DataLength=%s" % (n, rec['sizebytes']),
-                    "Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),
-                ]
+                ] + (["Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),] if rec.get('mimetype', None) else [])
+
 
             
         # start with index.html's uri and the sitemap
