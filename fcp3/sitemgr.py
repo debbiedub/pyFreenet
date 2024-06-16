@@ -1603,12 +1603,19 @@ class SiteState:
                     sizebytes = os.path.getsize(rec['path'])
                     rec['sizebytes'] = sizebytes
                     rec['dda'] = True
-                return [
-                    "Files.%d.Name=%s" % (n, rec['name']),
-                    "Files.%d.UploadFrom=disk" % n,
-                    "Files.%d.Filename=%s" % (n, rec['path']),
-                    "Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),
-                ]
+                if rec.get('mimetype', None):
+                    return [
+                        "Files.%d.Name=%s" % (n, rec['name']),
+                        "Files.%d.UploadFrom=disk" % n,
+                        "Files.%d.Filename=%s" % (n, rec['path']),
+                        "Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),
+                    ]
+                else:
+                    return [
+                        "Files.%d.Name=%s" % (n, rec['name']),
+                        "Files.%d.UploadFrom=disk" % n,
+                        "Files.%d.Filename=%s" % (n, rec['path']),
+                    ]
             else:
                 if rec['name'] in self.generatedTextData:
                     data = self.generatedTextData[rec['name']].encode("utf-8")
@@ -1617,12 +1624,19 @@ class SiteState:
                 datatoappend.append(data)
                 # update the sizebytes from the data actually read here.
                 rec['sizebytes'] = len(data)
-                return [
-                    "Files.%d.Name=%s" % (n, rec['name']),
-                    "Files.%d.UploadFrom=direct" % n,
-                    "Files.%d.DataLength=%s" % (n, rec['sizebytes']),
-                    "Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),
-                ]
+                if rec.get('mimetype', None):
+                    return [
+                        "Files.%d.Name=%s" % (n, rec['name']),
+                        "Files.%d.UploadFrom=direct" % n,
+                        "Files.%d.DataLength=%s" % (n, rec['sizebytes']),
+                        "Files.%d.Metadata.ContentType=%s" % (n, rec['mimetype']),
+                    ]
+                else:
+                    return [
+                        "Files.%d.Name=%s" % (n, rec['name']),
+                        "Files.%d.UploadFrom=direct" % n,
+                        "Files.%d.DataLength=%s" % (n, rec['sizebytes']),
+                    ]
 
             
         # start with index.html's uri and the sitemap
