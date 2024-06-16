@@ -1577,7 +1577,7 @@ class SiteState:
         datatoappend = []
 
         def fileMsgLines(n, rec):
-            if rec.get('target', 'separate') == 'separate':
+            if rec.get('target', 'separate') == 'separate' and rec.get('uri', None):
                 return [ # FIXME: rec['name'] can be str or bytes. Find out which one and why.
                     "Files.%d.Name=%s" % (n, (rec['name'] if isinstance(rec['name'], str) else rec['name'].decode("utf-8"))),
                     "Files.%d.UploadFrom=redirect" % n,
