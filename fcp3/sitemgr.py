@@ -1365,7 +1365,7 @@ class SiteState:
                 if separate:
                     try:
                         uri = rec['uri']
-                    except KeyError:
+                    except (KeyError, TypeError):
                         if 'path' in rec:
                             raw = open(rec['path'],"rb").read()
                             uri = self.chkCalcNode.genchk(
@@ -1475,22 +1475,25 @@ class SiteState:
         # now we parse the index to see which files are directly
         # referenced from the index page. These should have precedence
         # over other files.
-        try:
-            indexText = self.generatedTextData[self.indexRec['name']]
-        except KeyError:
+        if self.indexRec:
             try:
-                indexText = io.open(self.indexRec['path'], "r", encoding="utf-8").read()
-            except UnicodeDecodeError:
-                # no unicode file? Let io.open guess.
+                indexText = self.generatedTextData[self.indexRec['name']]
+            except (KeyError, TypeError):
                 try:
-                    indexText = io.open(self.indexRec['path'], "r").read()
+                    indexText = io.open(self.indexRec['path'], "r", encoding="utf-8").read()
                 except UnicodeDecodeError:
-                    # almost final chance: replace errors.
+                    # no unicode file? Let io.open guess.
                     try:
-                        indexText = io.open(self.indexRec['path'], "r", encoding="utf-8", errors="xmlcharrefreplace").read()
-                    except (TypeError, UnicodeDecodeError):
-                        # truly final chance: just throw out errors. TODO: Use chardet: https://pypi.python.org/pypi/chardet
-                        indexText = io.open(self.indexRec['path'], "r", encoding="utf-8", errors="ignore").read()
+                        indexText = io.open(self.indexRec['path'], "r").read()
+                    except UnicodeDecodeError:
+                        # almost final chance: replace errors.
+                        try:
+                            indexText = io.open(self.indexRec['path'], "r", encoding="utf-8", errors="xmlcharrefreplace").read()
+                        except (TypeError, UnicodeDecodeError):
+                            # truly final chance: just throw out errors. TODO: Use chardet: https://pypi.python.org/pypi/chardet
+                            indexText = io.open(self.indexRec['path'], "r", encoding="utf-8", errors="ignore").read()
+        else:
+            indexText = ""
         # now resort the recBySize to have the recs which are
         # referenced in index first - with additional preference to CSS files.
         # For files outside the index, prefer html files before others.
@@ -1587,7 +1590,7 @@ class SiteState:
                 DDAdir = os.path.dirname(rec['path'])
                 try:
                     hasDDA = hasDDAtested[DDAdir]
-                except KeyError:
+                except (KeyError, TypeError):
                     hasDDA = self.node.testDDA(Directory=DDAdir,
                                                WantReadDirectory=True, 
                                                WantWriteDirectory=False)
