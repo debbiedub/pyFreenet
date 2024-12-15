@@ -267,6 +267,8 @@ def help():
     print("          - run quietly")
     print("  -n, --no-insert")
     print("          - do not insert the site (only for add and update)")
+    # TODO: freesitemgr update --check-external-keys <sitename>
+    #       check the availability of all external keys and queue dead keys for re-upload.
     print("  -i, --index")
     print("          - index file (default is index.html)")
     print("  -m, --mime-type")
@@ -338,6 +340,7 @@ def noNodeError(sitemgr, msg):
 #@+node:main
 def main():
 
+    # TODO: add --check-external-keys or so (set all failing external keys as to-be-reuploaded; like reinsert, but only failing)
     force = False
     cron = False
     chkCalcNode = None
