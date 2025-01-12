@@ -3211,8 +3211,11 @@ def guessMimetype(filename):
         m = "application/octet-stream"
     return m
 
-_re_slugify = re.compile('[^\w\s\.-]', re.UNICODE)
-_re_slugify_multidashes = re.compile('[-\s]+', re.UNICODE)
+
+_re_slugify = re.compile(r'[^\w\s\.-]', re.UNICODE)
+_re_slugify_multidashes = re.compile(r'[-\s]+', re.UNICODE)
+
+
 def toUrlsafe(filename):
     """Make a filename url-safe, keeping only the basename and killing all
 potentially unfitting characters.
