@@ -1,5 +1,3 @@
-#@+leo-ver=4
-#@+node:@file sitemgr.py
 """
 new persistent SiteMgr class
 """
@@ -22,8 +20,8 @@ new persistent SiteMgr class
 # --only-external-files
 
 
-#@+others
-#@+node:imports
+
+
 import fnmatch
 import io
 import json
@@ -40,8 +38,8 @@ import fcp3 as fcp
 from fcp3 import CRITICAL, ERROR, INFO, DETAIL, DEBUG #, NOISY
 from fcp3.node import hashFile
 
-#@-node:imports
-#@+node:globals
+
+
 defaultBaseDir = os.path.join(os.path.expanduser('~'), ".freesitemgr")
 
 maxretries = -1
@@ -64,14 +62,13 @@ minVersion = 0
 class Hell(Exception):
     """Something smells wrong here..."""
 
-#@-node:globals
-#@+node:class SiteMgr
+
+
 class SiteMgr:
     """
     New nuclear-war-resistant Freesite insertion class
     """
-    #@    @+others
-    #@+node:__init__
+
     def __init__(self, *args, **kw):
         """
         Creates a new SiteMgr object
@@ -114,8 +111,8 @@ class SiteMgr:
         
         self.load()
     
-    #@-node:__init__
-    #@+node:load
+
+
     def load(self):
         """
         Loads all site records
@@ -188,8 +185,8 @@ class SiteMgr:
                 )
             self.sites.append(site)
     
-    #@-node:load
-    #@+node:create
+
+
     def create(self):
         """
         Creates a sites config
@@ -205,8 +202,8 @@ class SiteMgr:
     
         self.save()
     
-    #@-node:create
-    #@+node:save
+
+
     def save(self):
     
         # now write out some boilerplate    
@@ -231,8 +228,8 @@ class SiteMgr:
         for site in self.sites:
             site.save()
     
-    #@-node:save
-    #@+node:addSite
+
+
     def addSite(self, **kw):
         """
         adds a new site
@@ -264,8 +261,8 @@ class SiteMgr:
     
         return site
     
-    #@-node:addSite
-    #@+node:hasSite
+
+
     def hasSite(self, name):
         """
         Returns True if site 'name' already exists
@@ -276,8 +273,8 @@ class SiteMgr:
         except:
             return False
     
-    #@-node:hasSite
-    #@+node:getSite
+
+
     def getSite(self, name):
         """
         Returns a ref to the SiteState object for site 'name', or
@@ -288,16 +285,16 @@ class SiteMgr:
         except:
             raise Exception("No such site '%s'" % name)
     
-    #@-node:getSite
-    #@+node:getSiteNames
+
+
     def getSiteNames(self):
         """
         Returns a list of names of known sites
         """
         return [site.name for site in self.sites]
     
-    #@-node:getSiteNames
-    #@+node:removeSite
+
+
     def removeSite(self, name):
         """
         Removes given site
@@ -306,8 +303,8 @@ class SiteMgr:
         self.sites.remove(site)
         os.unlink(site.path)
     
-    #@-node:removeSite
-    #@+node:cancelUpdate
+
+
     def cancelUpdate(self, name):
         """
         Removes given site
@@ -315,8 +312,8 @@ class SiteMgr:
         site = self.getSite(name)
         site.cancelUpdate()
     
-    #@-node:cancelUpdate
-    #@+node:insert
+
+
     def insert(self, *sites, **kw):
         """
         Inserts either named site, or all sites if no name given
@@ -336,8 +333,8 @@ class SiteMgr:
                 print("freesitemgr: updating site '%s' on %s" % (site.name, time.asctime()))
             site.insert()
     
-    #@-node:insert
-    #@+node:reinsert
+
+
     def reinsert(self, *sites, **kw):
         """
         Mark sites for reinsert: set all external files as needsupload
@@ -358,8 +355,8 @@ class SiteMgr:
             site.mark_for_reinsert()
             site.insert()
     
-    #@-node:reinsert
-    #@+node:cleanup
+
+
     def cleanup(self, *sites, **kw):
         """
         Cleans up node queue in respect of completed inserts for given sites
@@ -372,8 +369,8 @@ class SiteMgr:
         for site in sites:
             site.cleanup()
     
-    #@-node:cleanup
-    #@+node:securityCheck
+
+
     def securityCheck(self):
     
         # a nice little tangent for the entertainment of those who
@@ -426,19 +423,19 @@ class SiteMgr:
                     print()
                     time.sleep(0.5)
     
-    #@-node:securityCheck
-    #@+node:fallbackLogger
+
+
     def fallbackLogger(self, level, msg):
         """
         This logger is used if no node FCP port is available
         """
         print(msg)
     
-    #@-node:fallbackLogger
-    #@-others
 
-#@-node:class SiteMgr
-#@+node:class SiteState
+
+
+
+
 class SiteState:
     """
     Stores the current state of a single freesite's insertion, in a way
@@ -446,8 +443,7 @@ class SiteState:
 
     The state is saved as a pretty-printed python dict, in ~/.freesitemgr/<sitename>
     """
-    #@    @+others
-    #@+node:__init__
+
     def __init__(self, **kw):
         """
         Create a sitemgr object
@@ -522,8 +518,8 @@ class SiteState:
 #            raise Exception("Site %s, directory %s, no %s present" % (
 #                self.name, self.dir, self.index))
     
-    #@-node:__init__
-    #@+node:load
+
+
     def load(self):
         """
         Attempt to load a freesite
@@ -601,8 +597,8 @@ class SiteState:
         finally:
             self.fileLock.release()
     
-    #@-node:load
-    #@+node:create
+
+
     def create(self):
         """
         Creates initial site config
@@ -622,8 +618,8 @@ class SiteState:
         # now can save
         self.save()
     
-    #@-node:create
-    #@+node:mark_for_reinsert
+
+
     def mark_for_reinsert(self):
         """
         mark all files as changed
@@ -633,8 +629,8 @@ class SiteState:
         self.needToUpdate = True
         self.save()
     
-    #@-node:mark_for_reinsert
-    #@+node:save
+
+
     def save(self):
         """
         Saves the node state
@@ -724,8 +720,8 @@ class SiteState:
         finally:
             self.fileLock.release()
     
-    #@-node:save
-    #@+node:getFile
+
+
     def getFile(self, name):
         """
         returns the control record for file 'name'
@@ -735,8 +731,8 @@ class SiteState:
                 return f
         return None
     
-    #@-node:getFile
-    #@+node:cancelUpdate
+
+
     def cancelUpdate(self):
         """
         Cancels an insert that was happening
@@ -755,8 +751,8 @@ class SiteState:
         
         self.log(INFO, "cancel:%s:update cancelled" % self.name)
     
-    #@-node:cancelUpdate
-    #@+node:insert
+
+
     def insert(self):
         """
         Performs insertion of this site, or gets as far as
@@ -975,8 +971,8 @@ class SiteState:
     
         self.save()
     
-    #@-node:insert
-    #@+node:cleanup
+
+
     def cleanup(self):
         """
         Cleans up node queue in respect of currently-inserting freesite,
@@ -989,8 +985,8 @@ class SiteState:
         else:
             self.clearNodeQueue()
     
-    #@-node:cleanup
-    #@+node:managePendingInsert
+
+
     def managePendingInsert(self):
         """
         Check on the status of the currently running insert
@@ -1100,8 +1096,8 @@ class SiteState:
         
         self.save()
         
-    #@-node:managePendingInsert
-    #@+node:scan
+
+
     def scan(self):
         """
         Scans all files in the site's filesystem directory, marking
@@ -1208,8 +1204,8 @@ class SiteState:
         else:
             self.log(INFO, "scan: site %s has not changed" % self.name)
     
-    #@-node:scan
-    #@+node:clearNodeQueue
+
+
     def clearNodeQueue(self):
         """
         remove all node queue records relating to this site
@@ -1222,8 +1218,8 @@ class SiteState:
             if idparts[0] == 'freesitemgr' and idparts[1] == self.name:
                 self.node.clearGlobalJob(id)
     
-    #@-node:clearNodeQueue
-    #@+node:readNodeQueue
+
+
     def readNodeQueue(self):
         """
         Refreshes the node global queue, and reads from the queue a dict of
@@ -1241,8 +1237,8 @@ class SiteState:
                 jobs[name] = job
         return jobs
     
-    #@-node:readNodeQueue
-    #@+node:createIndexAndSitemapIfNeeded
+
+
     def createIndexAndSitemapIfNeeded(self):
         """
         generate and insert an index.html if none exists
@@ -1412,16 +1408,16 @@ class SiteState:
             self.files.append(self.sitemapRec)
         
     
-    #@-node:createIndexAndSitemapIfNeeded
-    #@+node:allocId
+
+
     def allocId(self, name):
         """
         Allocates a unique ID for a given file
         """
         return "freesitemgr|%s|%s" % (self.name, name)
     
-    #@-node:allocId
-    #@+node:markManifestFiles
+
+
     def markManifestFiles(self):
         """
         Selects the files which should directly be put in the manifest and
@@ -1547,8 +1543,8 @@ class SiteState:
             totalsize += rec['sizebytes']
         
     
-    #@-node:markManifestFiles
-    #@+node:makeManifest
+
+
     def makeManifest(self):
         """
         Create a site manifest insertion command buffer from our
@@ -1697,31 +1693,31 @@ class SiteState:
             self.log(ERROR, "The datalength of %s to be uploaded does not match the length reported to the node of %s. This is a bug, please report it to the pyFreenet maintainer." % (datalength, reportedlength))
 
     
-    #@-node:makeManifest
-    #@+node:fallbackLogger
+
+
     def fallbackLogger(self, level, msg):
         """
         This logger is used if no node FCP port is available
         """
         print(msg)
     
-    #@-node:fallbackLogger
-    #@-others
 
-#@-node:class SiteState
-#@+node:funcs
+
+
+
+
 # utility funcs
 
-#@+others
-#@+node:getFileSize
+
+
 def getFileSize(filepath):
     """
     Get the size of the file in bytes.
     """
     return os.stat(filepath)[stat.ST_SIZE]
 
-#@-node:getFileSize
-#@+node:fixUri
+
+
 def fixUri(uri, name, version=0):
     """
     Conditions a URI to be suitable for freesitemgr
@@ -1740,30 +1736,24 @@ def fixUri(uri, name, version=0):
     
     return uri
 
-#@-node:fixUri
-#@+node:targetFilename
+
+
 def ChkTargetFilename(name):
     """
     Make the name suitable for a ChkTargetFilename
     """
     return os.path.basename(name)
 
-#@-node:targetFilename
-#@+node:runTest
+
+
 def runTest():
     
     mgr = SiteMgr(verbosity=DEBUG)
     mgr.insert()
 
-#@-node:runTest
-#@-others
-#@-node:funcs
-#@+node:mainline
+
+
+
+
 if __name__ == '__main__':
     runTest()
-
-#@-node:mainline
-#@-others
-
-#@-node:@file sitemgr.py
-#@-leo
