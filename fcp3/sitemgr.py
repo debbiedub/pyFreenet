@@ -35,6 +35,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import List
 
 import fcp3 as fcp
 from fcp3 import CRITICAL, ERROR, INFO, DETAIL, DEBUG  # , NOISY
@@ -76,7 +77,7 @@ class SiteMgr:
     New nuclear-war-resistant Freesite insertion class
     """
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw) -> None:
         """
         Creates a new SiteMgr object
 
@@ -118,7 +119,7 @@ class SiteMgr:
 
         self.load()
 
-    def load(self):
+    def load(self) -> None:
         """
         Loads all site records
         """
@@ -151,7 +152,7 @@ class SiteMgr:
 
         try:
             # create node, if we can
-            self.node = fcp.FCPNode(**nodeopts)
+            self.node: fcp.FCPNode | None = fcp.FCPNode(**nodeopts)
             if not self.chkCalcNode:
                 self.chkCalcNode = self.node
 
@@ -191,7 +192,7 @@ class SiteMgr:
                 )
             self.sites.append(site)
 
-    def create(self):
+    def create(self) -> None:
         """
         Creates a sites config
         """
@@ -207,7 +208,7 @@ class SiteMgr:
 
         self.save()
 
-    def save(self):
+    def save(self) -> None:
 
         # now write out some boilerplate
         f = open(self.conffile, "w")
@@ -231,7 +232,7 @@ class SiteMgr:
         for site in self.sites:
             site.save()
 
-    def addSite(self, **kw):
+    def addSite(self, **kw) -> 'SiteState':
         """
         adds a new site
 
@@ -262,7 +263,7 @@ class SiteMgr:
 
         return site
 
-    def hasSite(self, name):
+    def hasSite(self, name: str) -> bool:
         """
         Returns True if site 'name' already exists
         """
@@ -272,7 +273,7 @@ class SiteMgr:
         except Exception:
             return False
 
-    def getSite(self, name):
+    def getSite(self, name: str) -> 'SiteState':
         """
         Returns a ref to the SiteState object for site 'name', or
         raises an exception if it doesn't exist
@@ -282,13 +283,13 @@ class SiteMgr:
         except Exception:
             raise Exception("No such site '%s'" % name)
 
-    def getSiteNames(self):
+    def getSiteNames(self) -> List[str]:
         """
         Returns a list of names of known sites
         """
         return [site.name for site in self.sites]
 
-    def removeSite(self, name):
+    def removeSite(self, name: str) -> None:
         """
         Removes given site
         """
@@ -296,14 +297,14 @@ class SiteMgr:
         self.sites.remove(site)
         os.unlink(site.path)
 
-    def cancelUpdate(self, name):
+    def cancelUpdate(self, name: str) -> None:
         """
         Removes given site
         """
         site = self.getSite(name)
         site.cancelUpdate()
 
-    def insert(self, *sites, **kw):
+    def insert(self, *sites, **kw) -> None:
         """
         Inserts either named site, or all sites if no name given
         """
@@ -312,11 +313,11 @@ class SiteMgr:
             self.securityCheck()
 
         if sites:
-            sites = [self.getSite(name) for name in sites]
+            sites2 = [self.getSite(name) for name in sites]
         else:
-            sites = self.sites
+            sites2 = self.sites
 
-        for site in sites:
+        for site in sites2:
             if cron:
                 print("--------------------------------------" +
                       "-------------------------------")
@@ -324,7 +325,7 @@ class SiteMgr:
                     site.name, time.asctime()))
             site.insert()
 
-    def reinsert(self, *sites, **kw):
+    def reinsert(self, *sites, **kw) -> None:
         """
         Mark sites for reinsert: set all external files as needsupload
         """
@@ -333,11 +334,11 @@ class SiteMgr:
             self.securityCheck()
 
         if sites:
-            sites = [self.getSite(name) for name in sites]
+            sites2 = [self.getSite(name) for name in sites]
         else:
-            sites = self.sites
+            sites2 = self.sites
 
-        for site in sites:
+        for site in sites2:
             if cron:
                 print("--------------------------------------" +
                       "-------------------------------")
@@ -346,19 +347,19 @@ class SiteMgr:
             site.mark_for_reinsert()
             site.insert()
 
-    def cleanup(self, *sites, **kw):
+    def cleanup(self, *sites, **kw) -> None:
         """
         Cleans up node queue in respect of completed inserts for given sites
         """
         if sites:
-            sites = [self.getSite(name) for name in sites]
+            sites2 = [self.getSite(name) for name in sites]
         else:
-            sites = self.sites
+            sites2 = self.sites
 
-        for site in sites:
+        for site in sites2:
             site.cleanup()
 
-    def securityCheck(self):
+    def securityCheck(self) -> None:
 
         # a nice little tangent for the entertainment of those who
         # never bother to read the source code
@@ -417,7 +418,7 @@ class SiteMgr:
                     print()
                     time.sleep(0.5)
 
-    def fallbackLogger(self, level, msg):
+    def fallbackLogger(self, level: int, msg: str) -> None:
         """
         This logger is used if no node FCP port is available
         """
@@ -507,7 +508,7 @@ class SiteState:
 #            raise Exception("Site %s, directory %s, no %s present" % (
 #                self.name, self.dir, self.index))
 
-    def load(self):
+    def load(self) -> None:
         """
         Attempt to load a freesite
         """
@@ -584,7 +585,7 @@ class SiteState:
         finally:
             self.fileLock.release()
 
-    def create(self):
+    def create(self) -> None:
         """
         Creates initial site config
         """
@@ -603,7 +604,7 @@ class SiteState:
         # now can save
         self.save()
 
-    def mark_for_reinsert(self):
+    def mark_for_reinsert(self) -> None:
         """
         mark all files as changed
         """
@@ -612,7 +613,7 @@ class SiteState:
         self.needToUpdate = True
         self.save()
 
-    def save(self):
+    def save(self) -> None:
         """
         Saves the node state
         """
@@ -709,7 +710,7 @@ class SiteState:
                 return f
         return None
 
-    def cancelUpdate(self):
+    def cancelUpdate(self) -> None:
         """
         Cancels an insert that was happening
         """
@@ -727,7 +728,7 @@ class SiteState:
 
         self.log(INFO, "cancel:%s:update cancelled" % self.name)
 
-    def insert(self):
+    def insert(self) -> None:
         """
         Performs insertion of this site, or gets as far as
         we can, saving along the way so we can later resume
@@ -962,7 +963,7 @@ class SiteState:
 
         self.save()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """
         Cleans up node queue in respect of currently-inserting freesite,
         removing completed queue items and updating our local records
@@ -976,7 +977,7 @@ class SiteState:
         else:
             self.clearNodeQueue()
 
-    def managePendingInsert(self):
+    def managePendingInsert(self) -> None:
         """
         Check on the status of the currently running insert
         """
@@ -1086,7 +1087,7 @@ class SiteState:
 
         self.save()
 
-    def scan(self):
+    def scan(self) -> None:
         """
         Scans all files in the site's filesystem directory, marking
         the ones which need updating or new inserting
@@ -1192,7 +1193,7 @@ class SiteState:
         else:
             self.log(INFO, "scan: site %s has not changed" % self.name)
 
-    def clearNodeQueue(self):
+    def clearNodeQueue(self) -> None:
         """
         remove all node queue records relating to this site
         """
@@ -1221,11 +1222,11 @@ class SiteState:
                 jobs[name] = job
         return jobs
 
-    def createIndexAndSitemapIfNeeded(self):
+    def createIndexAndSitemapIfNeeded(self) -> None:
         """
         generate and insert an index.html if none exists
         """
-        def genindexuri():
+        def genindexuri() -> None:
             # dumb hack - calculate uri if missing
             if not self.indexRec.get('uri', None):
                 self.indexRec['uri'] = self.chkCalcNode.genchk(
@@ -1239,7 +1240,7 @@ class SiteState:
                 self.insertingIndex = True
                 self.save()
 
-        def gensitemapuri():
+        def gensitemapuri() -> None:
             # dumb hack - calculate uri if missing
             if not self.sitemapRec.get('uri', None):
                 self.sitemapRec['uri'] = self.chkCalcNode.genchk(
@@ -1249,7 +1250,7 @@ class SiteState:
             # yes, remember its uri for the manifest
             self.sitemapUri = self.sitemapRec['uri']
 
-        def createindex():
+        def createindex() -> None:
             # create an index.html with a directory listing
             title = "Freesite %s directory listing" % self.name,
             indexlines = [
@@ -1299,7 +1300,7 @@ class SiteState:
                 raise
             # needs no URI: is always in manifest.
 
-        def createsitemap():
+        def createsitemap() -> None:
             # create a sitemap.html with a directory listing
             title = "Sitemap for %s" % self.name,
             lines = [
@@ -1395,7 +1396,7 @@ class SiteState:
             # register the sitemap for upload.
             self.files.append(self.sitemapRec)
 
-    def allocId(self, name):
+    def allocId(self, name: str) -> str:
         """
         Allocates a unique ID for a given file
         """
@@ -1710,7 +1711,7 @@ class SiteState:
                      "This is a bug, please report it to " +
                      "the pyFreenet maintainer.")
 
-    def fallbackLogger(self, level, msg):
+    def fallbackLogger(self, level: int, msg: str) -> None:
         """
         This logger is used if no node FCP port is available
         """
@@ -1720,14 +1721,14 @@ class SiteState:
 # utility funcs
 
 
-def getFileSize(filepath):
+def getFileSize(filepath: str) -> int:
     """
     Get the size of the file in bytes.
     """
     return os.stat(filepath)[stat.ST_SIZE]
 
 
-def fixUri(uri, name, version=0):
+def fixUri(uri: str, name: str, version: int = 0) -> str:
     """
     Conditions a URI to be suitable for freesitemgr
     """
@@ -1746,14 +1747,14 @@ def fixUri(uri, name, version=0):
     return uri
 
 
-def ChkTargetFilename(name):
+def ChkTargetFilename(name: str) -> str:
     """
     Make the name suitable for a ChkTargetFilename
     """
     return os.path.basename(name)
 
 
-def runTest():
+def runTest() -> None:
 
     mgr = SiteMgr(verbosity=DEBUG)
     mgr.insert()
