@@ -117,6 +117,8 @@ class SiteMgr:
         # To decide whether to upload index and activelink as part of
         # the manifest, we need to remember their record.
 
+        self.sites: List['SiteState']
+
         self.load()
 
     def load(self) -> None:
@@ -347,7 +349,7 @@ class SiteMgr:
             site.mark_for_reinsert()
             site.insert()
 
-    def cleanup(self, *sites, **kw) -> None:
+    def cleanup(self, *sites: str, **kw) -> None:
         """
         Cleans up node queue in respect of completed inserts for given sites
         """
@@ -366,12 +368,12 @@ class SiteMgr:
 
         now = time.localtime()
 
-        def w(delay, s):
+        def w(delay: float, s: str) -> None:
             time.sleep(delay)
             sys.stdout.write(s)
             sys.stdout.flush()
 
-        def wln(delay, s):
+        def wln(delay: float, s: str) -> None:
             w(delay, s)
             print()
 
@@ -635,7 +637,7 @@ class SiteState:
 
             w = f.write
 
-            def writeVars(comment="", tail="", **kw):
+            def writeVars(comment: str = "", tail: str = "", **kw):
                 """
                 Pretty-print a 'name=value' line, with optional tail string
                 """
@@ -701,7 +703,7 @@ class SiteState:
         finally:
             self.fileLock.release()
 
-    def getFile(self, name):
+    def getFile(self, name: str):
         """
         returns the control record for file 'name'
         """
@@ -1035,7 +1037,7 @@ class SiteState:
 
                     # uplift the new URI, extract the edition number,
                     # update our record
-                    def updateEdition(uri, ed):
+                    def updateEdition(uri: str, ed: str) -> str:
                         return "/".join(uri.split("/")[:2] + [ed])
                     manifestUri = job.result
                     edition = manifestUri.split("/")[-1]
