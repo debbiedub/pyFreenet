@@ -35,7 +35,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import List
+from typing import List, Dict, TypedDict
 
 import fcp3 as fcp
 from fcp3 import CRITICAL, ERROR, INFO, DETAIL, DEBUG  # , NOISY
@@ -427,6 +427,20 @@ class SiteMgr:
         print(msg)
 
 
+class File(TypedDict, total=False):
+    mimetype: str
+    hash: str
+    name: str
+    uri: str
+    sizebytes: int
+    state: str
+    path: str
+    dda: bool
+    id: str | None
+    target: str
+    chkname: str
+
+
 class SiteState:
     """
     Stores the current state of a single freesite's insertion, in a way
@@ -479,7 +493,8 @@ class SiteState:
         self.uriPub = kw.get('uriPub', '')
         self.uriPriv = kw.get('uriPriv', '')
         self.updateInProgress = True
-        self.files = []
+        self.files: List[File] = []
+        self.filesDict: Dict[str, File]
         self.maxConcurrent = kw.get('maxconcurrent', defaultMaxConcurrent)
         self.priority = kw.get('priority', defaultPriority)
         self.basedir = kw.get('basedir', defaultBaseDir)
@@ -703,7 +718,7 @@ class SiteState:
         finally:
             self.fileLock.release()
 
-    def getFile(self, name: str):
+    def getFile(self, name: str) -> File | None:
         """
         returns the control record for file 'name'
         """
@@ -1113,7 +1128,7 @@ class SiteState:
         physFiles = []
         physDict = {}
         for f in lst:
-            rec = {}
+            rec: File = {}
             try:
                 enc = "utf-8"
                 f['fullpath'].decode(enc)
@@ -1404,7 +1419,7 @@ class SiteState:
         """
         return "freesitemgr|%s|%s" % (self.name, name)
 
-    def markManifestFiles(self):
+    def markManifestFiles(self) -> None:
         """
         Selects the files which should directly be put in the manifest and
         marks them with rec['target'] = 'manifest'. All other files
@@ -1497,7 +1512,7 @@ class SiteState:
                                    if rec['name'] in fileNamesInIndex
                                    and rec['name'].lower().endswith('.css')])
         fileNamesInManifest = set()
-        recByIndexAndSize = []
+        recByIndexAndSize: List[File] = []
         recByIndexAndSize.extend(rec for rec in recBySize
                                  if rec['name'] in fileNamesInIndexCSS)
         recByIndexAndSize.extend(rec for rec in recBySize
@@ -1541,7 +1556,7 @@ class SiteState:
             rec['target'] = 'manifest'
             totalsize += rec['sizebytes']
 
-    def makeManifest(self):
+    def makeManifest(self) -> None:
         """
         Create a site manifest insertion command buffer from our
         current inventory
@@ -1564,10 +1579,10 @@ class SiteState:
         # add each file's entry to the command buffer
         n = 0
         # cache DDA requests to avoid stalling for ages on big sites
-        hasDDAtested = {}
+        hasDDAtested: Dict[str, bool] = {}
         datatoappend = []
 
-        def fileMsgLines(n, rec):
+        def fileMsgLines(n: int, rec: File) -> List[str]:
             if (rec.get('target', 'separate') == 'separate' and
                     rec.get('uri', None)):
                 return [
