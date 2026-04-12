@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
-#@+leo-ver=4
-#@+node:@file freesitemgr
-#@@first
-#@+others
-#@+node:freesitemgr-script
+
 """
 A utility to update freesites from within a cron environment
 """
-#@+others
-#@+node:imports
-import sys, os, time, subprocess, traceback, getopt
+
+import sys
+import os
+import traceback
+import getopt
 import os.path
 
 import fcp3 as fcp
 import fcp3.node
-from fcp3.sitemgr import SiteMgr, fixUri, defaultMaxManifestSizeBytes, defaultMaxNumberSeparateFiles
+from fcp3.sitemgr import SiteMgr, fixUri, \
+    defaultMaxManifestSizeBytes, defaultMaxNumberSeparateFiles
 
-#@-node:imports
-#@+node:globals
 progname = sys.argv[0]
 
 # time we wait after starting fred, to allow the node to 'warm up'
@@ -26,14 +23,14 @@ startupTime = 180
 
 # directory where we have freenet installed,
 # change it as needed
-#freenetDir = "/home/david/freenet"
+# freenetDir = "/home/david/freenet"
 
 homeDir = os.path.expanduser("~")
 
 # derive path of freenet pid file, the (non)existence
 # of which is the easiest test of whether the freenet
 # node is running
-#freenetPidFile = os.path.join(freenetDir, "Freenet.pid")
+# freenetPidFile = os.path.join(freenetDir, "Freenet.pid")
 
 logFile = os.path.join(homeDir, "updatesites.log")
 pidFile = os.path.join(homeDir, "updatesites.pid")
@@ -44,8 +41,7 @@ else:
     confDirName = ".freesitemgr"
 confDir = os.path.join(homeDir, confDirName)
 
-#@-node:globals
-#@+node:editCreateConfig
+
 def editCreateConfig(sitemgr):
     """
     Creates an initial config file interactively
@@ -53,12 +49,13 @@ def editCreateConfig(sitemgr):
     print("Setting up configuration file %s" % sitemgr.conffile)
 
     # get fcp hostname
-    fcpHost = input("FCP Hostname [%s] (* for all): " % sitemgr.fcpHost).strip()
+    fcpHost = input(
+        "FCP Hostname [%s] (* for all): " % sitemgr.fcpHost).strip()
     if not fcpHost:
         fcpHost = sitemgr.fcpHost
     if fcpHost == '*':
         fcpHost = ""
-    
+
     # get fcp port
     while 1:
         fcpPort = input("FCP Port [%s]: " % sitemgr.fcpPort).strip()
@@ -66,18 +63,19 @@ def editCreateConfig(sitemgr):
             fcpPort = sitemgr.fcpPort
         try:
             fcpPort = int(fcpPort)
-        except:
+        except Exception:
             continue
         break
 
     print("Trying FCP port at %s:%s" % (fcpHost, fcpPort))
     try:
         fcpnode = fcp.FCPNode(host=fcpHost, port=fcpPort)
-    except:
+    except Exception:
         traceback.print_exc()
         print("Failed to connect to FCP Port")
         print("Please ensure your node is running, with its FCP port")
-        print("reachable at %s:%s, and try this command again" % (fcpHost, fcpPort))
+        print("reachable at %s:%s, and try this command again" %
+              (fcpHost, fcpPort))
         print("Setup aborted")
         return
 
@@ -92,8 +90,7 @@ def editCreateConfig(sitemgr):
 
     print("Configuration saved to %s" % sitemgr.conffile)
 
-#@-node:editCreateConfig
-#@+node:addSite
+
 def addSite(sitemgr, sitepath=None):
     """
     Interactively adds a new site to config
@@ -102,7 +99,7 @@ def addSite(sitemgr, sitepath=None):
         print("Add new site for path %s" % sitepath)
     else:
         print("Add new site")
-    
+
     if not sitemgr.node:
         print("Cannot add site - no contact with node on %s:%s" % (
             sitemgr.fcpHost, sitemgr.fcpPort))
@@ -112,7 +109,9 @@ def addSite(sitemgr, sitepath=None):
     if sitepath:
         sitepathabs = os.path.abspath(sitepath)
         sitepathname = os.path.basename(sitepathabs)
-    if sitepath and os.path.isdir(sitepathabs) and not sitemgr.hasSite(sitepathname):
+    if (sitepath and
+            os.path.isdir(sitepathabs) and
+            not sitemgr.hasSite(sitepathname)):
         sitename, sitedir = sitepathname, sitepathabs
         print("Using sitename %s and path %s" % (sitename, sitedir))
     else:
@@ -122,7 +121,8 @@ def addSite(sitemgr, sitepath=None):
             else:
                 print("The argument is not a valid site path.")
         while 1:
-            sitename = input("Name of freesite, or empty line to cancel: ").strip()
+            sitename = input(
+                "Name of freesite, or empty line to cancel: ").strip()
             if not sitename:
                 print("Add site aborted")
                 return
@@ -130,9 +130,10 @@ def addSite(sitemgr, sitepath=None):
                 print("Freesite '%s' already exists" % sitename)
                 continue
             break
-    
+
         while 1:
-            sitedir = input("Directory where freesite's files reside: ").strip()
+            sitedir = input(
+                "Directory where freesite's files reside: ").strip()
             if not sitedir:
                 print("Add site aborted")
                 return
@@ -146,7 +147,8 @@ def addSite(sitemgr, sitepath=None):
             break
 
     while 1:
-        uriPriv = input("Site private URI (if any - press ENTER for new\n: ").strip()
+        uriPriv = input(
+            "Site private URI (if any - press ENTER for new\n: ").strip()
         if not uriPriv:
             uriPub, uriPriv = sitemgr.node.genkey()
         else:
@@ -155,7 +157,7 @@ def addSite(sitemgr, sitepath=None):
                 continue
             try:
                 uriPub = sitemgr.node.invertprivate(uriPriv)
-            except:
+            except Exception:
                 traceback.print_exc()
                 print("Invalid private URI:\n  %s" % uriPriv)
                 continue
@@ -164,13 +166,15 @@ def addSite(sitemgr, sitepath=None):
         uriPriv = fixUri(uriPriv, sitename)
 
     # good to go - add the site
-    site = sitemgr.addSite(name=sitename, dir=sitedir, uriPub=uriPub, uriPriv=uriPriv)
+    site = sitemgr.addSite(name=sitename,
+                           dir=sitedir,
+                           uriPub=uriPub,
+                           uriPriv=uriPriv)
 
     print("Added new freesite: '%s' => %s" % (site.name, sitedir))
     return site.name
 
-#@-node:addSite
-#@+node:removeSite
+
 def removeSite(sitemgr, sitename):
     """
     tries to remove site from config
@@ -179,12 +183,13 @@ def removeSite(sitemgr, sitename):
         print("No such freesite '%s'" % sitename)
         return
 
-    if getyesno("Are you sure you wish to delete the configuration (metadata and keys) for freesite '%s'" % sitename, False):
+    if getyesno(
+            "Are you sure you wish to delete the configuration " +
+            "(metadata and keys) for freesite '%s'" % sitename, False):
         sitemgr.removeSite(sitename)
         print("Removed freesite '%s'" % sitename)
 
-#@-node:removeSite
-#@+node:cancelUpdate
+
 def cancelUpdate(sitemgr, sitename, force=False):
     """
     tries to remove site from config
@@ -196,8 +201,8 @@ def cancelUpdate(sitemgr, sitename, force=False):
     doit = False
     if force:
         doit = True
-    elif getyesno("Are you sure you wish to cancel update for freesite '%s'" \
-                    % sitename, False):
+    elif getyesno("Are you sure you wish to cancel update for freesite '%s'"
+                  % sitename, False):
         doit = True
     if doit:
         sitemgr.cancelUpdate(sitename)
@@ -205,8 +210,7 @@ def cancelUpdate(sitemgr, sitename, force=False):
     else:
         print("Not cancelling update for freesite '%s'" % sitename)
 
-#@-node:cancelUpdate
-#@+node:getChkCalcNode
+
 def getChkCalcNode(addr):
     """
     yuck - using a separate node for chk calculation
@@ -219,15 +223,14 @@ def getChkCalcNode(addr):
     elif nparts == 2:
         chkHost = parts[0] or fcp.node.defaultFCPHost
         chkPort = parts[1] or fcp.node.defaultFCPPort
-    
+
     try:
         chkNode = fcp.node.FCPNode(host=chkHost, port=chkPort)
         return chkNode
-    except:
+    except Exception:
         return None
 
-#@-node:getChkCalcNode
-#@+node:getYesNo
+
 def getyesno(ques, default=False):
     """
     prompt for yes/no answer, with default
@@ -236,31 +239,32 @@ def getyesno(ques, default=False):
         prmt = "[Y/n]"
     else:
         prmt = "[y/N]"
-        
+
     resp = input(ques + " " + prmt + " ").strip().lower()
-    
+
     if not resp:
         return default
-    #elif resp[0] in ['y', 't']:
+    # elif resp[0] in ['y', 't']:
     elif resp[0] == 'y':
         return True
     else:
         return False
-#@-node:getYesNo
-#@+node:help
+
+
 def help():
     """
     dump help info and exit
     """
     maxMankiB = defaultMaxManifestSizeBytes / 1024
     print("%s: a console-based USK freesite insertion utility" % progname)
-    
+
     print("Usage: %s [options] <command> <args>" % progname)
     print("Options:")
     print("  -h, --help")
     print("          - display this help message")
     print("  -c, --config-dir=path")
-    print("          - use different config directory (default is %s)" % confDir)
+    print("          - use different config directory (default is %s)" %
+          confDir)
     print("  -v, --verbose")
     print("          - run verbosely, use multiple times for even more noise")
     print("  -q, --quiet")
@@ -268,7 +272,8 @@ def help():
     print("  -n, --no-insert")
     print("          - do not insert the site (only for add and update)")
     # TODO: freesitemgr update --check-external-keys <sitename>
-    #       check the availability of all external keys and queue dead keys for re-upload.
+    #       check the availability of all external keys and queue dead keys for
+    #       re-upload.
     print("  -i, --index")
     print("          - index file (default is index.html)")
     print("  -m, --mime-type")
@@ -318,18 +323,16 @@ def help():
 
     sys.exit(0)
 
-#@-node:help
-#@+node:usage
+
 def usage(ret=-1, msg=None):
-    if msg != None:
+    if msg is not None:
         print(msg)
     print("Usage: %s [options] <command> [<arguments>]" % progname)
     print("Do '%s -h' for help" % progname)
 
     sys.exit(ret)
 
-#@-node:usage
-#@+node:noNodeError
+
 def noNodeError(sitemgr, msg):
     print(msg + ": cannot connect to node FCP port")
     print("To use this command, you must have a freenet node running")
@@ -338,29 +341,28 @@ def noNodeError(sitemgr, msg):
     print("or run '%s setup' to configure a different FCP port" % progname)
     sys.exit(1)
 
-#@-node:noNodeError
-#@+node:main
+
 def main():
 
-    # TODO: add --check-external-keys or so (set all failing external keys as to-be-reuploaded; like reinsert, but only failing)
+    # TODO: add --check-external-keys or so (set all failing
+    # external keys as to-be-reuploaded; like reinsert, but only failing)
     force = False
     cron = False
-    chkCalcNode = None
 
     # default job options
     opts = {
-            "verbosity" : fcp.node.ERROR,
-            "Verbosity" : 0,
-            #"logfile" : logFile,
-            "priority"  : 3,
-            "noInsert"    : False
+            "verbosity": fcp.node.ERROR,
+            "Verbosity": 0,
+            # "logfile": logFile,
+            "priority":  3,
+            "noInsert":  False
             }
 
     # process command line switches
     try:
         cmdopts, args = getopt.getopt(
             sys.argv[1:],
-	    "?hvc:l:r:RqfnCVi:m:",
+            "?hvc:l:r:RqfnCVi:m:",
             ["help", "verbose", "config-dir=", "logfile=",
              "max-concurrent=", "quiet", "force", "no-insert",
              "priority", "realtime", "cron",
@@ -373,9 +375,7 @@ def main():
         # print help information and exit:
         usage()
         sys.exit(2)
-    output = None
-    verbose = False
-    #print cmdopts
+    # print(cmdopts)
     for o, a in cmdopts:
 
         if o in ("-?", "-h", "--help"):
@@ -389,16 +389,16 @@ def main():
         if o in ("-v", "--verbosity"):
             opts['verbosity'] += 1
             opts['Verbosity'] = 1023
-        
+
         if o in ("-q", "--quiet"):
             opts['verbosity'] = fcp.node.SILENT
-        
+
         if o in ("-n", "--no-insert"):
             opts['noInsert'] = True
-        
+
         if o in ("-c", "--config-dir"):
             opts['basedir'] = a
-        
+
         if o in ("-l", "--logfile"):
             opts['logfile'] = a
 
@@ -411,11 +411,11 @@ def main():
         if o in ("--mime-type-match"):
             try:
                 pattern, mimeType = a.split('=')
-            except:
+            except Exception:
                 usage("--mime-type-match must have PATTERN=MIMETYPE parameter")
             if 'mimeTypeMatch' not in opts:
                 opts['mimeTypeMatch'] = []
-            opts['mimeTypeMatch'] += [ { pattern:mimeType, }, ]
+            opts['mimeTypeMatch'] += [{pattern: mimeType, }, ]
 
         if o == '--max-manifest-size':
             opts['maxManifestSizeBytes'] = int(float(a)*1024)
@@ -425,13 +425,13 @@ def main():
             if not chkNode:
                 usage("Failed to connect to specified CHK calc node '%s'" % a)
             opts['chkCalcNode'] = chkNode
-        
+
         if o in ("-r", "--priority"):
             try:
                 pri = int(a)
                 if pri < 0 or pri > 6:
                     raise hell
-            except:
+            except Exception:
                 usage("Invalid priority '%s'" % pri)
             opts['priority'] = int(a)
 
@@ -453,7 +453,7 @@ def main():
     cmd = args.pop(0)
 
     if cmd not in [
-            'setup','config','init',
+            'setup', 'config', 'init',
             'add',
             'remove',
             'list', 'listall',
@@ -480,17 +480,17 @@ def main():
             sitename = addSite(sitemgr, sitepath)
         else:
             sitename = addSite(sitemgr)
-    
-        if opts["noInsert"] == False:
-            # renew sitemgr, then update 
+
+        if opts["noInsert"] is False:
+            # renew sitemgr, then update
             # FIXME: Move the whole if-elif-else into a function to
             # make it clear that nothing spills out.
             try:
                 sitemgr.node.shutdown()
-            except:
+            except Exception:
                 try:
                     sitemgr.node.socket.close()
-                except:
+                except Exception:
                     pass
                 pass
             sitemgr = SiteMgr(**opts)
@@ -542,7 +542,7 @@ def main():
                     print("    dir: %s" % site.dir)
                     print("    uri: %s" % site.uriPub)
                     print("    privkey: %s" % site.uriPriv)
-                    #print "    version: %s" % info['version']
+                    # print "    version: %s" % info['version']
 
             pass
 
@@ -572,21 +572,13 @@ def main():
 
     try:
         sitemgr.node.shutdown()
-    except:
+    except Exception:
         try:
             sitemgr.node.socket.close()
-        except:
+        except Exception:
             pass
         pass
 
-#@-node:main
-#@+node:mainline
+
 if __name__ == '__main__':
     main()
-
-#@-node:mainline
-#@-others
-#@-node:freesitemgr-script
-#@-others
-#@-node:@file freesitemgr
-#@-leo
